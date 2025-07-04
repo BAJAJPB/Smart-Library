@@ -1,12 +1,24 @@
-FROM eclipse-temurin:17-jdk
+# Stage 1: Build the app using Maven
+FROM maven:3.9-eclipse-temurin-17 as build
 
-# Set working directory
 WORKDIR /app
 
-# Copy the JAR file from the target directory
-COPY target/*.jar app.jar
+# Copy project files
+COPY pom.xml .
+COPY src ./src
 
-# Expose the application port
+# Package the application
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run the app
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+# Copy the built JAR from the first stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose port
 EXPOSE 8088
 
 # Run the Spring Boot application
